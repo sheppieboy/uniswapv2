@@ -7,10 +7,22 @@ interface IERC20 {
     function transfer(address to, uint256 amount) external;
 }
 
+error InsufficientLiquidityMinted();
+error InsufficientLiquidityBurned();
+error TransferFailed();
+
 contract UniswapV2Pair is ERC20{
+    uint256 constant MINIMUM_LIQUIDITY = 1000;
 
     uint256 private reserve0;
     uint256 private reserve1;
+
+    address public token0;
+    address public token1;
+
+    event Burn(address indexed sender, uint256 amount0, uint256 amount1);
+    event Mint(address indexed sender, uint256 amount0, uint256 amount1);
+    event Sync(uint256 reserve0, uint256 reserve1);
 
     function mint() public {
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
