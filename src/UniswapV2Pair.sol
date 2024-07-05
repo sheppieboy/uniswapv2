@@ -11,6 +11,9 @@ interface IERC20 {
 error InsufficientLiquidityMinted();
 error InsufficientLiquidityBurned();
 error TransferFailed();
+error InsufficientOutputAmount();
+error InsufficientLiquidity();
+error InvalidK();
 
 contract UniswapV2Pair is ERC20, Math{
     uint256 constant MINIMUM_LIQUIDITY = 1000;
@@ -24,6 +27,7 @@ contract UniswapV2Pair is ERC20, Math{
     event Burn(address indexed sender, uint256 amount0, uint256 amount1, address to);
     event Mint(address indexed sender, uint256 amount0, uint256 amount1);
     event Sync(uint256 reserve0, uint256 reserve1);
+    event Swap(address indexed from, uint256 amount0Out, uint256 amount1Out, address indexed to);
 
     constructor(address _token0, address _token1) ERC20("uniswapV2", "UNI", 18) {
         token0 = _token0;
@@ -51,6 +55,7 @@ contract UniswapV2Pair is ERC20, Math{
     }
 
     function mint() public {
+        (uint112 _reserve0, uint112 _reserve1) = getReserves();
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
         uint256 balance1 = IERC20(token1).balanceOf(address(this));
 
@@ -72,7 +77,7 @@ contract UniswapV2Pair is ERC20, Math{
         if (liquidity <= 0) revert InsufficientLiquidityMinted();
 
         _mint(msg.sender, liquidity);
-        _update(balance0, balance0);
+        _update(balance0, balance1);
 
         emit Mint(msg.sender, amount0, amount1);
     }
@@ -102,10 +107,6 @@ contract UniswapV2Pair is ERC20, Math{
 
 
     //private methods
-
-    function _update(uint256 balance0, uint256 balance1) private {
-
-    }
 
     function _safeTransfer(address token, address to, uint256 value) private {
         (bool success, bytes memory data) = token.call(abi.encodeWithSignature("transfer(address,uint256)", to, value));
