@@ -163,6 +163,27 @@ contract UniswapV2PairTest is Test{
         assertReserves(1 ether + 0.01 ether, 2 ether + 0.02 ether);
     }
 
+    function test_RevertWhen_SwappingZeroAmounts() public {
+        token0.transfer(address(pair), 1 ether);
+        token1.transfer(address(pair), 2 ether);
+        pair.mint(address(this));
+
+        vm.expectRevert(encodeError("InsufficientOutputAmount()"));
+        pair.swap(0, 0, address(this));
+    }
+
+    function test_RevertWhen_SwappingMoreThanLiquidity() public {
+        token0.transfer(address(pair), 1 ether);
+        token1.transfer(address(pair), 2 ether);
+        pair.mint(address(this));
+
+        vm.expectRevert(encodeError("InsufficientLiquidity()"));
+        pair.swap(1.1 ether, 0, address(this));
+
+        vm.expectRevert(encodeError("InsufficientLiquidity()"));
+        pair.swap(0, 2.2 ether, address(this));
+    }
+
 }
 
 contract TestInteractiveContract{
