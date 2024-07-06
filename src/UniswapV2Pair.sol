@@ -18,11 +18,16 @@ error InvalidK();
 contract UniswapV2Pair is ERC20, Math{
     uint256 constant MINIMUM_LIQUIDITY = 1000;
 
-    uint256 private reserve0;
-    uint256 private reserve1;
+    uint32 private blockTimestampLast;
+
+    uint112 private reserve0;
+    uint112 private reserve1;
 
     address public token0;
     address public token1;
+
+    uint256 public price0CumulativeLast;
+    uint256 public price1CumulativeLast;
 
     event Burn(address indexed sender, uint256 amount0, uint256 amount1, address to);
     event Mint(address indexed sender, uint256 amount0, uint256 amount1);
@@ -77,7 +82,7 @@ contract UniswapV2Pair is ERC20, Math{
         if (liquidity <= 0) revert InsufficientLiquidityMinted();
 
         _mint(msg.sender, liquidity);
-        _update(balance0, balance1);
+        _update(balance0, balance1, _reserve0, _reserve1);
 
         emit Mint(msg.sender, amount0, amount1);
     }
@@ -112,5 +117,25 @@ contract UniswapV2Pair is ERC20, Math{
         (bool success, bytes memory data) = token.call(abi.encodeWithSignature("transfer(address,uint256)", to, value));
 
         if (!success || (data.length != 0 && !abi.decode(data, (bool)))) revert TransferFailed();
+    }
+
+    function _update(uint256 balance0, uint256 balance1, uint112 _reserve0, uint112 _reserve1) private {
+
+        if(balance0 > type(uint112).max || balance1 > type(uint112).max) revert BalanceOverflow();
+
+        unchecked {
+            uint32 timeElapsed = uint32(block.timestamp) - blockTimestampLast;
+
+            if (timeElapsed > 0 && _reserve0 > 0 && _reserve1 > 0){
+                price0CumulativeLast += uint256(UQ112x112.encode(_reserve1).uqdiv(_reserve0)) * timeElapsed;
+                price1CumulativeLast += uint256(UQ112x112.encode(_reserve0).uqdiv(_reserve1)) * timeElapsed;
+            }
+        }
+
+        reserve0 = uint112(balance0);
+        reserve1 = uint112(balance1);
+        blockTimestampLast = uint32(block.timestamp);
+
+        emit Sync(reserve0, reserve1);
     }
 }
