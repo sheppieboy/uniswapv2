@@ -39,18 +39,18 @@ contract UniswapV2PairTest is Test{
          encoded = abi.encodeWithSignature(error, a);
     }
 
-    function assertReserves(uint112 expectedReserve0, uint112 expectedReserve1) internal {
+    function assertReserves(uint112 expectedReserve0, uint112 expectedReserve1) internal view {
         (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
         assertEq(reserve0, expectedReserve0, "unexpected reserve0");
         assertEq(reserve1, expectedReserve1, "unexpected reserve1");
     }
 
-    function assertCumulativePrices(uint256 expectedPrice0, uint256 expectedPrice1) internal {
+    function assertCumulativePrices(uint256 expectedPrice0, uint256 expectedPrice1) internal view{
         assertEq(pair.price0CumulativeLast(), expectedPrice0, "unexpected cumulative price 0");
         assertEq(pair.price1CumulativeLast(), expectedPrice1, "unexpected cumulative price 1");
     }
 
-    function assertBlockTimestampLast(uint32 expected) internal {
+    function assertBlockTimestampLast(uint32 expected) internal view {
         (,, uint32 blockTimestampLast) = pair.getReserves();
         assertEq(blockTimestampLast, expected, "unexpected blockTimestampLast");
     }
@@ -59,6 +59,16 @@ contract UniswapV2PairTest is Test{
         (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
         price0 = reserve0 > 0 ? (reserve1 * uint256(UQ112x112.Q112))/reserve0 : 0;
         price1 = reserve1 > 0 ? (reserve0 * uint256(UQ112x112.Q112))/reserve1 : 0;
+    }
+
+    function test_MintNoLiquidityAddedYet() public {
+        token0.transfer(address(pair), 1 ether);
+        token1.transfer(address(pair), 1 ether);
+        pair.mint(address(this));
+
+        assertEq(pair.balanceOf(address(this)), 1 ether - 1000);
+        assertReserves(1 ether, 1 ether);
+        assertEq(pair.totalSupply(), 1 ether);
     }
 
 }
