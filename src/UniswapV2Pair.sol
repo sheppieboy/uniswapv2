@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 import {ERC20} from "../lib/solmate/src/tokens/ERC20.sol";
 import {Math} from "./libraries/Math.sol";
+import {UQ112x112} from "./libraries/UQ112x112.sol";
 
 interface IERC20 {
     function balanceOf(address) external returns (uint256);
