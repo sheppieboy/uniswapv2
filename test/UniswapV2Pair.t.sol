@@ -71,6 +71,18 @@ contract UniswapV2PairTest is Test{
         assertEq(pair.totalSupply(), 1 ether);
     }
 
+    function test_RevertWhen_MintLiquidityUnderflow() public {
+        vm.expectRevert(encodeError("Panic(uint256)", 0x11));
+        pair.mint(address(this));
+    }
+
+    function test_RevertWhen_MintZeroLiquidity() public {
+        token0.transfer(address(pair), 1000); //this is min liq amount
+        token1.transfer(address(pair), 1000);
+
+        vm.expectRevert(encodeError("InsufficientLiquidityMinted()"));
+        pair.mint(address(this));
+    }
 }
 
 contract TestInteractiveContract{
