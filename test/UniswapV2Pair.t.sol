@@ -212,6 +212,65 @@ contract UniswapV2PairTest is Test{
         assertReserves(1 ether, 2 ether);
     }
 
+    function test_CumulativePrices() public {
+        vm.warp(0);
+        token0.transfer(address(pair), 1 ether);
+        token1.transfer(address(pair), 1 ether);
+        pair.mint(address(this));
+        (uint256 initialPrice0, uint256 initialPrice1) = calculativeCurrentPrice();
+
+        //0 seconds passed
+        pair.sync();
+        assertCumulativePrices(0, 0);
+
+        vm.warp(1);
+        pair.sync();
+        assertBlockTimestampLast(1);
+        assertCumulativePrices(initialPrice0, initialPrice1);
+
+        //2 seconds passed
+        vm.warp(2);
+        pair.sync();
+        assertBlockTimestampLast(2);
+        assertCumulativePrices(initialPrice0 * 2, initialPrice1 * 2);
+
+        //3 seconds passed
+        vm.warp(3);
+        pair.sync();
+        assertBlockTimestampLast(3);
+        assertCumulativePrices(initialPrice0 * 3, initialPrice1 * 3);
+
+        //price change when more liq added
+        token0.transfer(address(pair), 2 ether);
+        token1.transfer(address(pair), 1 ether);
+        pair.mint(address(this));
+
+        (uint256 newPrice0, uint256 newPrice1) = calculativeCurrentPrice();
+
+        // // 0 seconds since last reserves update.
+        assertCumulativePrices(initialPrice0 * 3, initialPrice1 * 3);
+
+
+        //1 second passed
+        vm.warp(4);
+        pair.sync();
+        assertBlockTimestampLast(4);
+        assertCumulativePrices(initialPrice0 * 3 + newPrice0, initialPrice1 * 3 + newPrice1);
+
+        //2 seconds passed
+        vm.warp(5);
+        pair.sync();
+        assertBlockTimestampLast(5);
+        assertCumulativePrices(initialPrice0 * 3 + newPrice0 * 2, initialPrice1 * 3 + newPrice1 * 2);
+
+
+        //3 seconds passed
+        vm.warp(6);
+        pair.sync();
+        assertBlockTimestampLast(6);
+        assertCumulativePrices(initialPrice0 * 3 + newPrice0 * 3, initialPrice1 * 3 + newPrice1 * 3);
+    }
+
 }
 
 contract TestInteractiveContract{

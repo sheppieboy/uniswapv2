@@ -62,6 +62,11 @@ contract UniswapV2Pair is ERC20, Math{
         emit Swap(msg.sender, amount0Out, amount1Out, to);
     }
 
+    function sync() public {
+        (uint112 _reserve0, uint112 _reserve1,) = getReserves();
+        _update(IERC20(token0).balanceOf(address(this)), IERC20(token1).balanceOf(address(this)), _reserve0, _reserve1);
+    }
+
     function mint(address to) public returns (uint256 liquidity){
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
