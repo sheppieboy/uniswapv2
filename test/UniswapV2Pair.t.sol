@@ -29,6 +29,15 @@ contract UniswapV2PairTest is Test{
         token0.mint(10 ether, address(testInteractiveContract));
         token1.mint(10 ether, address(testInteractiveContract));
     }
+
+    function encodeError(string memory error) internal pure returns(bytes memory encoded){
+        encoded = abi.encodeWithSignature(error);
+    }
+
+    function encodeError(string memory error, uint256 a) internal pure returns(bytes memory encoded){
+         encoded = abi.encodeWithSignature(error, a);
+    }
+
 }
 
 contract TestInteractiveContract{
@@ -37,7 +46,7 @@ contract TestInteractiveContract{
         ERC20(_token0).transfer(_pairAddress, amount0);
         ERC20(_token1).transfer(_pairAddress, amount1);
 
-        UniswapV2Pair(_pairAddress).mint();
+        UniswapV2Pair(_pairAddress).mint(address(this));
     }
 
     function removeLiquidity(address _pairAddress) public {
