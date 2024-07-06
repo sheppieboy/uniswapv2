@@ -147,6 +147,22 @@ contract UniswapV2PairTest is Test{
         assertEq(token1.balanceOf(address(this)), 10 ether - 2 ether - 0.2 ether, "unexpected token1 balance");
         assertReserves(1 ether - 0.09 ether, 2 ether + 0.2 ether);
     }
+
+    function test_SwapBidirectional() public {
+        token0.transfer(address(pair), 1 ether);
+        token1.transfer(address(pair), 2 ether);
+        pair.mint(address(this));
+
+        token0.transfer(address(pair), 0.1 ether);
+        token1.transfer(address(pair), 0.2 ether);
+        pair.swap(0.09 ether, 0.18 ether, address(this));
+
+        assertEq(token0.balanceOf(address(this)), 10 ether - 1 ether - 0.01 ether, "unexpected token0 balance");
+        assertEq(token1.balanceOf(address(this)), 10 ether - 2 ether - 0.02 ether, "unexpected token1 balance");
+
+        assertReserves(1 ether + 0.01 ether, 2 ether + 0.02 ether);
+    }
+
 }
 
 contract TestInteractiveContract{
