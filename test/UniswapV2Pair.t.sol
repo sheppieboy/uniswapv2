@@ -5,6 +5,7 @@ import {Test, console} from "forge-std/Test.sol";
 import {ERC20Mintable} from "./mocks/ERC20Mintable.sol";
 import {UniswapV2Pair} from "../src/UniswapV2Pair.sol";
 import {ERC20} from "../lib/solmate/src/tokens/ERC20.sol";
+import {UQ112x112} from "../src/libraries/UQ112x112.sol";
 
 contract UniswapV2PairTest is Test{
     ERC20Mintable token0;
@@ -47,6 +48,17 @@ contract UniswapV2PairTest is Test{
     function assertCumulativePrices(uint256 expectedPrice0, uint256 expectedPrice1) internal {
         assertEq(pair.price0CumulativeLast(), expectedPrice0, "unexpected cumulative price 0");
         assertEq(pair.price1CumulativeLast(), expectedPrice1, "unexpected cumulative price 1");
+    }
+
+    function assertBlockTimestampLast(uint32 expected) internal {
+        (,, uint32 blockTimestampLast) = pair.getReserves();
+        assertEq(blockTimestampLast, expected, "unexpected blockTimestampLast");
+    }
+
+    function calculativeCurrentPrice() internal view returns(uint256 price0, uint256 price1){
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
+        price0 = reserve0 > 0 ? (reserve1 * uint256(UQ112x112.Q112))/reserve0 : 0;
+        price1 = reserve1 > 0 ? (reserve0 * uint256(UQ112x112.Q112))/reserve1 : 0;
     }
 
 }
