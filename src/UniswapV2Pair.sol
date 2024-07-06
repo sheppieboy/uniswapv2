@@ -15,17 +15,17 @@ error TransferFailed();
 error InsufficientOutputAmount();
 error InsufficientLiquidity();
 error InvalidK();
+error BalanceOverflow();
 
 contract UniswapV2Pair is ERC20, Math{
     uint256 constant MINIMUM_LIQUIDITY = 1000;
 
-    uint32 private blockTimestampLast;
-
-    uint112 private reserve0;
-    uint112 private reserve1;
-
     address public token0;
     address public token1;
+
+    uint32 private blockTimestampLast;
+    uint112 private reserve0;
+    uint112 private reserve1;
 
     uint256 public price0CumulativeLast;
     uint256 public price1CumulativeLast;
@@ -111,8 +111,12 @@ contract UniswapV2Pair is ERC20, Math{
         emit Burn(msg.sender, amount0, amount1, to);
     }
 
+    //public view functions
+    function getReserves() public view returns (uint112, uint112, uint32){
+        return (reserve0, reserve1, blockTimestampLast);
+    }
 
-    //private methods
+    //private functions
 
     function _safeTransfer(address token, address to, uint256 value) private {
         (bool success, bytes memory data) = token.call(abi.encodeWithSignature("transfer(address,uint256)", to, value));
