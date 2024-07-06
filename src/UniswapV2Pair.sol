@@ -18,6 +18,8 @@ error InvalidK();
 error BalanceOverflow();
 
 contract UniswapV2Pair is ERC20, Math{
+    using UQ112x112 for uint224;
+
     uint256 constant MINIMUM_LIQUIDITY = 1000;
 
     address public token0;
@@ -43,7 +45,7 @@ contract UniswapV2Pair is ERC20, Math{
     function swap(uint256 amount0Out, uint256 amount1Out, address to) public {
         if (amount0Out == 0 && amount1Out == 0) revert InsufficientOutputAmount();
 
-        (uint112 _reserve0, uint112 _reserve1) = getReserves();
+        (uint112 _reserve0, uint112 _reserve1,) = getReserves();
 
         if (amount0Out > _reserve0 || amount1Out > _reserve1) revert InsufficientLiquidity();
 
@@ -61,7 +63,7 @@ contract UniswapV2Pair is ERC20, Math{
     }
 
     function mint() public {
-        (uint112 _reserve0, uint112 _reserve1) = getReserves();
+        (uint112 _reserve0, uint112 _reserve1,) = getReserves();
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
         uint256 balance1 = IERC20(token1).balanceOf(address(this));
 
@@ -106,7 +108,10 @@ contract UniswapV2Pair is ERC20, Math{
         balance0 = IERC20(token0).balanceOf(address(this));
         balance1 = IERC20(token1).balanceOf(address(this));
 
-        _update(balance0, balance1);
+
+        (uint112 _reserve0, uint112 _reserve1, ) = getReserves();
+
+        _update(balance0, balance1, _reserve0, _reserve1);
 
         emit Burn(msg.sender, amount0, amount1, to);
     }
