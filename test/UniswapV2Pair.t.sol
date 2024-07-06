@@ -38,6 +38,17 @@ contract UniswapV2PairTest is Test{
          encoded = abi.encodeWithSignature(error, a);
     }
 
+    function assertReserves(uint112 expectedReserve0, uint112 expectedReserve1) internal {
+        (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
+        assertEq(reserve0, expectedReserve0, "unexpected reserve0");
+        assertEq(reserve1, expectedReserve1, "unexpected reserve1");
+    }
+
+    function assertCumulativePrices(uint256 expectedPrice0, uint256 expectedPrice1) internal {
+        assertEq(pair.price0CumulativeLast(), expectedPrice0, "unexpected cumulative price 0");
+        assertEq(pair.price1CumulativeLast(), expectedPrice1, "unexpected cumulative price 1");
+    }
+
 }
 
 contract TestInteractiveContract{
