@@ -11,18 +11,27 @@ contract UniswapV2PairTest is Test{
     ERC20Mintable token1;
 
     UniswapV2Pair pair;
+    TestInteractiveContract testInteractiveContract;
 
     function setUp() public {
+        testInteractiveContract = new TestInteractiveContract();
+
         token0 = new ERC20Mintable("Token A", "A");
         token1 = new ERC20Mintable("Token B", "B");
+
         pair = new UniswapV2Pair(address(token0), address(token1));
 
-        // token0.mint(10 ether);
-        // token1.mint(10 ether);
+        //mint tokens to this contract
+        token0.mint(10 ether, address(this));
+        token1.mint(10 ether, address(this));
+
+        //mint to test interactive contract
+        token0.mint(10 ether, address(testInteractiveContract));
+        token1.mint(10 ether, address(testInteractiveContract));
     }
 }
 
-contract TestContractiveContract{
+contract TestInteractiveContract{
 
     function addLiquidity(address _pairAddress, address _token0, address _token1, uint256 amount0, uint256 amount1) public {
         ERC20(_token0).transfer(_pairAddress, amount0);
