@@ -83,6 +83,40 @@ contract UniswapV2PairTest is Test{
         vm.expectRevert(encodeError("InsufficientLiquidityMinted()"));
         pair.mint(address(this));
     }
+
+    function test_MintWhenLiquidityAlreadyAdded() public {
+        token0.transfer(address(pair), 1 ether);
+        token1.transfer(address(pair), 1 ether);
+
+        pair.mint(address(this)); //LP + 1;
+
+        vm.warp(37);
+
+        token0.transfer(address(pair), 2 ether);
+        token1.transfer(address(pair), 2 ether);
+
+        pair.mint(address(this)); // LP + 2
+
+        assertEq(pair.balanceOf(address(this)), 3 ether - 1000);
+        assertEq(pair.totalSupply(), 3 ether);
+        assertReserves(3 ether, 3 ether);
+    }
+
+    function test_MintDifferingDepositAmounts() public {
+        token0.transfer(address(pair), 1 ether);
+        token1.transfer(address(pair), 1 ether);
+
+        pair.mint(address(this)); // + 1 LP
+        assertEq(pair.balanceOf(address(this)), 1 ether - 1000);
+        assertReserves(1 ether, 1 ether);
+
+        token0.transfer(address(pair), 2 ether);
+        token1.transfer(address(pair), 1 ether);
+
+        pair.mint(address(this)); // + 1 LP
+        assertEq(pair.balanceOf(address(this)), 2 ether - 1000);
+        assertReserves(3 ether, 2 ether);
+    }
 }
 
 contract TestInteractiveContract{
