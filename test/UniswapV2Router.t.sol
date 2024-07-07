@@ -24,9 +24,18 @@ contract UniswapV2RouterTest is Test{
         tokenB.mint(20 ether, address(this));
     }
 
+    function test_setUpIsCorrect() public view {
+        assertEq(tokenA.balanceOf(address(this)), 20 ether);
+        assertEq(tokenB.balanceOf(address(this)), 20 ether);
+        assertEq(tokenA.name(), "Token A");
+        assertEq(tokenB.name(), "Token B");
+        assertEq(tokenA.symbol(), "A");
+        assertEq(tokenB.symbol(), "B");
+    }
+
     function test_AddLiquidityCreatesPair() public {
         tokenA.approve(address(router), 1 ether);
-        tokenA.approve(address(router), 1 ether);
+        tokenB.approve(address(router), 1 ether);
 
         router.addLiquidity(address(tokenA), address(tokenB), 1 ether, 1 ether, 1 ether, 1 ether, address(this));
 
