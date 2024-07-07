@@ -11,6 +11,13 @@ library UniswapV2Library {
         (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve1);
     }
 
+    function quote(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) public pure returns (uint256 amountOut) {
+        if (amountIn == 0) revert InsufficientAmount();
+        if (reserveIn == 0 || reserveOut == 0) revert InsufficientLiquidity();
+
+        return (amountIn * reserveOut) / reserveIn;
+    }
+
     function getPairs(address factoryAddress, address tokenA, address tokenB) internal pure returns(address pairAddress){
         //first step is to sort token addresses
         (address token0, address token1) = sortTokens(tokenA, tokenB);
@@ -27,4 +34,5 @@ library UniswapV2Library {
         );
 
     }
+
 }
