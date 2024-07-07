@@ -49,12 +49,21 @@ contract UniswapV2LibraryTest is Test {
     function test_PairForTokensSorting() public view {
         address pairAddress = UniswapV2Library.pairFor(address(factory), address(tokenB), address(tokenA));
         assertEq(pairAddress, factory.pairs(address(tokenA), address(tokenB)));
+        assertEq(pairAddress, address(pair));
     }
 
-    function test_PairForNonExtistentFactory() public view {
+    function test_PairForNonExistentFactory() public view {
         address pairAddress = UniswapV2Library.pairFor(address(0xaabbcc), address(tokenB), address(tokenA));
 
         assertNotEq(pairAddress, factory.pairs(address(tokenA), address(tokenB)));
+    }
+
+    function test_PairForWrongTokenAddress() public view {
+        address pairAddress = UniswapV2Library.pairFor(address(factory), address(0xdeadbeef), address(tokenA));
+        assertNotEq(pairAddress, address(pair));
+
+        pairAddress = UniswapV2Library.pairFor(address(factory), address(0xdeadbeef), address(tokenB));
+        assertNotEq(pairAddress, address(pair));
     }
 
     function test_Quote() public pure {
@@ -67,4 +76,5 @@ contract UniswapV2LibraryTest is Test {
         amountOut = UniswapV2Library.quote(1 ether, 1 ether, 2 ether);
         assertEq(amountOut, 2 ether);
     }
+
 }
