@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 import {IUniswapV2Factory} from "./interfaces/IUniswapV2Factory.sol";
 import {IUniswapV2Pair} from "./interfaces/IUniswapV2Pair.sol";
+import {UniswapV2Library} from "./libraries/UniswapV2Library.sol";
 
 contract UniswapV2Router {
     IUniswapV2Factory factory;
@@ -37,4 +38,39 @@ contract UniswapV2Router {
             _safeTransferFrom(tokenB, msg.sender, pairAddress, amountB);
             liquidity = IUniswapV2Pair(pairAddress).mint(to);
         }
+
+
+        function _calculateLiquidity(
+            address tokenA, 
+            address tokenB, uint256 amountADesired, 
+            uint256 amountBDesired, 
+            uint256 amountAMin, 
+            uint256 amountBMin
+            ) internal pure returns(uint256 amountA, uint256 amountB){
+                
+                (uint256 reserveA, uint256 reserveB) = UniswapV2Library.getReserves(address(factory), tokenA, tokenB);
+
+                //if reserves are empty, this is a new pair, which means the liqudity will define the reserves ratio
+                if (reserveA == 0 && reserveB == 0) {
+                    (amountA, amountB) = (amountADesired, amountADesired);
+                } 
+                //not new pair
+                else{
+
+                    uint256 amountBOptimal = UniswapV2Library.quote(amountADesired, reserveA, reserveB);
+
+                    if (amountBOptimal <= amountBDesired) {
+                        if (amountBOptimal <= amountBMin) revert InsufficientBAmount();
+                        (amountA, amountB) = (amountADesired, amountBOptimal);
+                        
+                    }else {
+                        uint256 amountAOptimal = UniswapV2Library.quote(amountBDesired, reserveB, reserveA);
+
+                        assert(amountAOptimal <= amountADesired);
+
+                        if(amountAOptimal <= amountAMin) revert InsufficientAMount();
+                        (amountA, amountB) = (amountAOptimal, amountBDesired);
+                    }
+                }
+            }
 }
