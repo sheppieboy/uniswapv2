@@ -16,6 +16,7 @@ error InsufficientOutputAmount();
 error InsufficientLiquidity();
 error InvalidK();
 error BalanceOverflow();
+error AlreadyInitialized();
 
 contract UniswapV2Pair is ERC20, Math{
     using UQ112x112 for uint224;
@@ -37,7 +38,11 @@ contract UniswapV2Pair is ERC20, Math{
     event Sync(uint256 reserve0, uint256 reserve1);
     event Swap(address indexed from, uint256 amount0Out, uint256 amount1Out, address indexed to);
 
-    constructor(address _token0, address _token1) ERC20("uniswapV2", "UNI", 18) {
+    constructor() ERC20("uniswapV2", "UNI", 18) {}
+
+    function initialize(address _token0, address _token1) public {
+        if (token0 != address(0) || token1 != address(0)) revert AlreadyInitialized();
+
         token0 = _token0;
         token1 = _token1;
     }
