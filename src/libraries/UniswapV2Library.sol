@@ -1,4 +1,11 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
 
+import {IUniswapV2Pair} from "../interfaces/IUniswapV2Pair.sol";
+import {UniswapV2Pair} from "../UniswapV2Pair.sol";
+
+error InsufficientAmount();
+error InsufficientLiquidity();
 
 library UniswapV2Library {
 
@@ -18,7 +25,7 @@ library UniswapV2Library {
         return (amountIn * reserveOut) / reserveIn;
     }
 
-    function getPairs(address factoryAddress, address tokenA, address tokenB) internal pure returns(address pairAddress){
+    function pairFor(address factoryAddress, address tokenA, address tokenB) internal pure returns(address pairAddress){
         //first step is to sort token addresses
         (address token0, address token1) = sortTokens(tokenA, tokenB);
         //next we build a sequence of bytes that includes:
