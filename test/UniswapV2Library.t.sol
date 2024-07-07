@@ -29,6 +29,10 @@ contract UniswapV2LibraryTest is Test {
         pair = UniswapV2Pair(pairAddress);
     }
 
+    function encodeError(string memory error) internal pure returns (bytes memory encoded){
+        encoded = abi.encodeWithSignature(error);
+    }
+
     function test_GetRerserves() public {
         tokenA.transfer(address(pair), 1.1 ether);
         tokenB.transfer(address(pair), 0.8 ether);
@@ -75,6 +79,21 @@ contract UniswapV2LibraryTest is Test {
 
         amountOut = UniswapV2Library.quote(1 ether, 1 ether, 2 ether);
         assertEq(amountOut, 2 ether);
+    }
+
+    function test_RevertWhen_QuoteAmountInZero() public {
+        vm.expectRevert(encodeError("InsufficientAmount()"));
+        UniswapV2Library.quote(0, 1 ether, 1 ether);
+    }
+
+    function test_RevertWhen_QuoteRerserveInIsZero() public {
+        vm.expectRevert(encodeError("InsufficientLiquidity()"));
+        UniswapV2Library.quote(1 ether, 0 ether, 1 ether);
+    }
+
+    function test_RevertWhen_QuoteRerserveOutIsZero() public {
+        vm.expectRevert(encodeError("InsufficientLiquidity()"));
+        UniswapV2Library.quote(1 ether, 1 ether, 0 ether);
     }
 
 }
