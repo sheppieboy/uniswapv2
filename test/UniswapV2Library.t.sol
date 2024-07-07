@@ -4,6 +4,7 @@ import {Test, console} from "forge-std/Test.sol";
 import {UniswapV2Factory} from "../src/UniswapV2Factory.sol";
 import {UniswapV2Pair} from "../src/UniswapV2Pair.sol";
 import {ERC20Mintable} from "./mocks/ERC20Mintable.sol";
+import {UniswapV2Library} from "../src/libraries/UniswapV2Library.sol";
 
 
 contract UniswapV2LibraryTest is Test {
@@ -26,5 +27,17 @@ contract UniswapV2LibraryTest is Test {
         address pairAddress = factory.createPair(address(tokenA), address(tokenB));
 
         pair = UniswapV2Pair(pairAddress);
+    }
+
+    function test_GetRerserves() public {
+        tokenA.transfer(address(pair), 1.1 ether);
+        tokenB.transfer(address(pair), 0.8 ether);
+
+        UniswapV2Pair(address(pair)).mint(address(this));
+
+        (uint256 reserve0, uint256 reserve1) = UniswapV2Library.getReserves(address(factory), address(tokenA), address(tokenB));
+
+        assertEq(reserve0, 1.1 ether);
+        assertEq(reserve1, 0.8 ether);
     }
 }
