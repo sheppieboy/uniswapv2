@@ -56,4 +56,9 @@ contract UniswapV2LibraryTest is Test {
         address pairAddress = UniswapV2Library.pairFor(address(factory), address(tokenA), address(tokenB));
         assertEq(pairAddress, factory.pairs(address(tokenA), address(tokenB)));
     }
+
+    function test_PairForTokensSorting() public view {
+       address pairAddress = UniswapV2Library.pairFor(address(factory), address(tokenB), address(tokenA));
+       assertEq(pairAddress, factory.pairs(address(tokenA), address(tokenB)));
+    }
 }
