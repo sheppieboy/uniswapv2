@@ -40,4 +40,20 @@ contract UniswapV2LibraryTest is Test {
         assertEq(reserve0, 1.1 ether);
         assertEq(reserve1, 0.8 ether);
     }
+
+    function test_Quote() public pure {
+        uint256 amountOut = UniswapV2Library.quote(1 ether, 1 ether, 1 ether);
+        assertEq(amountOut, 1 ether);
+
+        amountOut = UniswapV2Library.quote(1 ether, 2 ether, 1 ether);
+        assertEq(amountOut, 0.5 ether);
+
+        amountOut = UniswapV2Library.quote(1 ether, 1 ether, 2 ether);
+        assertEq(amountOut, 2 ether);
+    }
+
+    function test_PairFor() public view {
+        address pairAddress = UniswapV2Library.pairFor(address(factory), address(tokenA), address(tokenB));
+        assertEq(pairAddress, factory.pairs(address(tokenA), address(tokenB)));
+    }
 }
