@@ -15,7 +15,7 @@ contract UniswapV2RouterTest {
 
     function setUp() public {
         factory = new UniswapV2Factory();
-        router = new UniswapV2Router();
+        router = new UniswapV2Router(address(factory));
 
         tokenA = new ERC20Mintable("Token A", "A");
         tokenB = new ERC20Mintable("Token B", "B");

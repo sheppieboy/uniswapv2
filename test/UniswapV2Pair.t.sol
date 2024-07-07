@@ -20,7 +20,9 @@ contract UniswapV2PairTest is Test{
         token0 = new ERC20Mintable("Token A", "A");
         token1 = new ERC20Mintable("Token B", "B");
 
-        pair = new UniswapV2Pair(address(token0), address(token1));
+        pair = new UniswapV2Pair();
+
+        pair.initialize(address(token0), address(token1));
 
         //mint tokens to this contract
         token0.mint(10 ether, address(this));
