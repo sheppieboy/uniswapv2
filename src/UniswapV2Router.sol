@@ -62,7 +62,7 @@ contract UniswapV2Router {
                     if (amountBOptimal <= amountBDesired) {
                         if (amountBOptimal <= amountBMin) revert InsufficientBAmount();
                         (amountA, amountB) = (amountADesired, amountBOptimal);
-                        
+
                     }else {
                         uint256 amountAOptimal = UniswapV2Library.quote(amountBDesired, reserveB, reserveA);
 
@@ -73,4 +73,9 @@ contract UniswapV2Router {
                     }
                 }
             }
+    
+    function _safeTransferFrom(address token, address from, address to, uint256 value) private {
+        (bool success, bytes memory data) = token.call(abi.encodeWithSignature("transferFrom(address,address,uint256)"));
+        if (!success || (data.length != 0 && !abi.decode(data, (bool)))) revert SafeTransferFailed();
+    }
 }
