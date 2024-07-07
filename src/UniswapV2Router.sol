@@ -4,6 +4,10 @@ import {IUniswapV2Factory} from "./interfaces/IUniswapV2Factory.sol";
 import {IUniswapV2Pair} from "./interfaces/IUniswapV2Pair.sol";
 import {UniswapV2Library} from "./libraries/UniswapV2Library.sol";
 
+error InsufficientBAmount();
+error InsufficientAAmount();
+error SafeTransferFailed();
+
 contract UniswapV2Router {
     IUniswapV2Factory factory;
 
@@ -46,7 +50,7 @@ contract UniswapV2Router {
             uint256 amountBDesired, 
             uint256 amountAMin, 
             uint256 amountBMin
-            ) internal pure returns(uint256 amountA, uint256 amountB){
+            ) internal returns(uint256 amountA, uint256 amountB){
                 
                 (uint256 reserveA, uint256 reserveB) = UniswapV2Library.getReserves(address(factory), tokenA, tokenB);
 
@@ -68,14 +72,14 @@ contract UniswapV2Router {
 
                         assert(amountAOptimal <= amountADesired);
 
-                        if(amountAOptimal <= amountAMin) revert InsufficientAMount();
+                        if(amountAOptimal <= amountAMin) revert InsufficientAAmount();
                         (amountA, amountB) = (amountAOptimal, amountBDesired);
                     }
                 }
             }
     
     function _safeTransferFrom(address token, address from, address to, uint256 value) private {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSignature("transferFrom(address,address,uint256)"));
+        (bool success, bytes memory data) = token.call(abi.encodeWithSignature("transferFrom(address,address,uint256)", from, to, value));
         if (!success || (data.length != 0 && !abi.decode(data, (bool)))) revert SafeTransferFailed();
     }
 }
