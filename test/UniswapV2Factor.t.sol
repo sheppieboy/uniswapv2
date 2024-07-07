@@ -3,6 +3,9 @@ pragma solidity ^0.8.13;
 import {Test, console} from "forge-std/Test.sol";
 import {UniswapV2Factory} from "../src/UniswapV2Factory.sol";
 import {ERC20Mintable} from "./mocks/ERC20Mintable.sol";
+import {UniswapV2Pair} from "../src/UniswapV2Pair.sol";
+
+
 contract UniswapV2FactoryTest is Test {
     UniswapV2Factory factory;
 
@@ -18,5 +21,9 @@ contract UniswapV2FactoryTest is Test {
         token1 = new ERC20Mintable("TokenB", "B");
         token2 = new ERC20Mintable("TokenC", "C");
         token3 = new ERC20Mintable("Tokend", "D");
+    }
+
+    function encodeError(string memory error) internal pure returns (bytes memory encoded){
+        encoded = abi.encodeWithSignature(error);
     }
 }
