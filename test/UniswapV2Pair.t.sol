@@ -120,6 +120,92 @@ contract UniswapV2PairTest is Test{
         assertReserves(3 ether, 2 ether);
     }
 
+    function test_Burn() public {
+        token0.transfer(address(pair), 1 ether);
+        token1.transfer(address(pair), 1 ether);
+
+        pair.mint(address(this));
+
+        uint256 liquidity = pair.balanceOf(address(this));
+        pair.transfer(address(pair), liquidity);
+        pair.burn(address(this));
+
+        assertEq(pair.balanceOf(address(this)), 0);
+        assertReserves(1000, 1000);
+        assertEq(pair.totalSupply(), 1000);
+        assertEq(token0.balanceOf(address(this)), 10 ether - 1000);
+        assertEq(token1.balanceOf(address(this)), 10 ether - 1000);
+    }
+
+    function test_BurnIsUnbalanced() public {
+        token0.transfer(address(pair), 1 ether);
+        token1.transfer(address(pair), 1 ether);
+        pair.mint(address(this));
+
+        token0.transfer(address(pair), 2 ether);
+        token1.transfer(address(pair), 1 ether);
+
+        pair.mint(address(this)); // + 1 LP
+
+        uint256 liquidity =  pair.balanceOf(address(this));
+        pair.transfer(address(pair), liquidity);
+        pair.burn(address(this));
+
+        assertEq(pair.balanceOf(address(this)), 0);
+        assertReserves(1500, 1000);
+        assertEq(pair.totalSupply(), 1000);
+        assertEq(token0.balanceOf(address(this)), 10 ether - 1500);
+        assertEq(token1.balanceOf(address(this)), 10 ether - 1000);
+    }
+
+    function test_BurnUnbalancedMultiUser() public {
+        testInteractiveContract.addLiquidity(address(pair), address(token0), address(token1), 1 ether, 1 ether);
+        assertEq(pair.balanceOf(address(this)), 0);
+        assertEq(pair.balanceOf(address(testInteractiveContract)), 1 ether - 1000);
+        assertEq(pair.totalSupply(), 1 ether);
+
+        token0.transfer(address(pair), 2 ether);
+        token1.transfer(address(pair), 1 ether);
+        pair.mint(address(this)); //1 + LP
+
+        uint256 liquidity = pair.balanceOf(address(this));
+        pair.transfer(address(pair), liquidity);
+        pair.burn(address(this));
+
+        //this user is penalized for providing unbalanced liquidity
+        assertEq(pair.balanceOf(address(this)), 0);
+        assertReserves(1.5 ether, 1 ether);
+        assertEq(pair.totalSupply(), 1 ether);
+        assertEq(token0.balanceOf(address(this)), 10 ether - 0.5 ether);
+        assertEq(token1.balanceOf(address(this)), 10 ether);
+
+        testInteractiveContract.removeLiquidity(address(pair));
+
+        // testInteractiveContract receives the amount collected from this user
+        assertEq(pair.balanceOf(address(testInteractiveContract)), 0);
+        assertReserves(1500, 1000);
+        assertEq(pair.totalSupply(), 1000);
+        assertEq(token0.balanceOf(address(testInteractiveContract)),10 ether + 0.5 ether - 1500);
+        assertEq(token1.balanceOf(address(testInteractiveContract)), 10 ether - 1000);
+    }
+
+    function test_RevertWhen_BurnZeroTotalSupply() public {
+        // 0x12; If you divide or modulo by zero.
+        vm.expectRevert(encodeError("Panic(uint256)", 0x12));
+        pair.burn(address(this));
+    }
+
+    function test_RevertWhen_BurnZeroLiquidity() public {
+        // Transfer and mint as a normal user.
+        token0.transfer(address(pair), 1 ether);
+        token1.transfer(address(pair), 1 ether);
+        pair.mint(address(this));
+
+        vm.prank(address(0xdeadbeef));
+        vm.expectRevert(encodeError("InsufficientLiquidityBurned()"));
+        pair.burn(address(this));
+    }
+
 
     function test_SwapBasicScenario() public {
         token0.transfer(address(pair), 1 ether);
@@ -285,6 +371,8 @@ contract TestInteractiveContract{
     }
 
     function removeLiquidity(address _pairAddress) public {
-        UniswapV2Pair(_pairAddress).burn();
+       uint256 liquidity = ERC20(_pairAddress).balanceOf(address(this));
+       ERC20(_pairAddress).transfer(_pairAddress, liquidity);
+       UniswapV2Pair(_pairAddress).burn(address(this));
     }
 }
