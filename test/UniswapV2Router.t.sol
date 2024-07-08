@@ -26,6 +26,10 @@ contract UniswapV2RouterTest is Test{
         tokenB.mint(20 ether, address(this));
     }
 
+    function encodeError(string memory error) internal pure returns(bytes memory encoded){
+        encoded = abi.encodeWithSignature(error);
+    }
+
     function test_setUpIsCorrect() public view {
         assertEq(tokenA.balanceOf(address(this)), 20 ether);
         assertEq(tokenB.balanceOf(address(this)), 20 ether);
@@ -75,10 +79,7 @@ contract UniswapV2RouterTest is Test{
     }
 
     function test_AddLiquidityAmountBOptimalIsOk() public {
-        address pairAddress = factory.createPair(
-            address(tokenA),
-            address(tokenB)
-        );
+        address pairAddress = factory.createPair(address(tokenA), address(tokenB));
 
         UniswapV2Pair pair = UniswapV2Pair(pairAddress);
 
@@ -100,6 +101,26 @@ contract UniswapV2RouterTest is Test{
         assertEq(amountB, 2 ether);
 
         assertEq(liquidity,  1414213562373095048);
+    }
+
+    function test_AddLiquidityAmountBOptimalIsTooLow() public {
+        address pairAddress = factory.createPair(address(tokenA), address(tokenB));
+
+        UniswapV2Pair pair = UniswapV2Pair(pairAddress);
+
+        assertEq(pair.token0(), address(tokenB));
+        assertEq(pair.token1(), address(tokenA));
+
+        // add initial liquidity to pair contract
+        tokenA.transfer(pairAddress, 5 ether);
+        tokenB.transfer(pairAddress, 10 ether);
+        pair.mint(address(this));
+
+        tokenA.approve(address(router), 1 ether);
+        tokenB.approve(address(router), 2 ether);
+
+        vm.expectRevert(encodeError("InsufficientBAmount()"));
+        router.addLiquidity(address(tokenA), address(tokenB), 1 ether, 2 ether, 1 ether, 2 ether, address(this));
     }
 
 
