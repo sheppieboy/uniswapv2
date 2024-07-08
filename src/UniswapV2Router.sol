@@ -56,7 +56,7 @@ contract UniswapV2Router {
 
                 //if reserves are empty, this is a new pair, which means the liqudity will define the reserves ratio
                 if (reserveA == 0 && reserveB == 0) {
-                    (amountA, amountB) = (amountADesired, amountADesired);
+                    (amountA, amountB) = (amountADesired, amountBDesired);
                 } 
                 //not new pair
                 else{
