@@ -39,7 +39,7 @@ contract UniswapV2RouterTest is Test{
         assertEq(tokenB.symbol(), "B");
     }
 
-    function test_AddLiquidityCreatesPair() public {
+    function test_AddLiquidity_CreatesPair() public {
         tokenA.approve(address(router), 1 ether);
         tokenB.approve(address(router), 1 ether);
 
@@ -51,7 +51,7 @@ contract UniswapV2RouterTest is Test{
     }
 
 
-    function test_AddLiquidityNoPair() public {
+    function test_AddLiquidity_NoPair() public {
         tokenA.approve(address(router), 1 ether);
         tokenB.approve(address(router), 1 ether);
 
@@ -78,7 +78,7 @@ contract UniswapV2RouterTest is Test{
         assertEq(tokenB.balanceOf(address(this)), 19 ether);
     }
 
-    function test_AddLiquidityAmountBOptimalIsOk() public {
+    function test_AddLiquidity_AmountBOptimalIsOk() public {
         address pairAddress = factory.createPair(address(tokenA), address(tokenB));
 
         UniswapV2Pair pair = UniswapV2Pair(pairAddress);
@@ -103,7 +103,7 @@ contract UniswapV2RouterTest is Test{
         assertEq(liquidity,  1414213562373095048);
     }
 
-    function test_AddLiquidityAmountBOptimalIsTooLow() public {
+    function test_RevertsWhen_AddLiquidity_AmountBOptimalIsTooLow() public {
         address pairAddress = factory.createPair(address(tokenA), address(tokenB));
 
         UniswapV2Pair pair = UniswapV2Pair(pairAddress);
@@ -123,5 +123,32 @@ contract UniswapV2RouterTest is Test{
         router.addLiquidity(address(tokenA), address(tokenB), 1 ether, 2 ether, 1 ether, 2 ether, address(this));
     }
 
+    // function test_AddLiquidity_AmountBOptimalIsTooHighAmountATooLow() public {
+
+    // }
+
+    function test_AddLiquidity_AmountBOptimalIsTooHighButAIsOk() public {
+        address pairAddress = factory.createPair(address(tokenA), address(tokenB));
+
+        UniswapV2Pair pair = UniswapV2Pair(pairAddress);
+
+        assertEq(pair.token0(), address(tokenB));
+        assertEq(pair.token1(), address(tokenA));
+
+        // add initial liquidity to pair contract
+        tokenA.transfer(pairAddress, 10 ether);
+        tokenB.transfer(pairAddress, 5 ether);
+        pair.mint(address(this));
+
+        tokenA.approve(address(router), 2 ether);
+        tokenB.approve(address(router), 1 ether);
+
+        (uint256 amountA, uint256 amountB, uint256 liquidity) = router.addLiquidity(address(tokenA), address(tokenB), 2 ether, 0.9 ether, 1.7 ether, 1 ether, address(this));
+        
+        assertEq(amountA, 1.8 ether);
+        assertEq(amountB, 0.9 ether);
+        assertEq(liquidity, 1272792206135785543);
+
+    }
 
 }
