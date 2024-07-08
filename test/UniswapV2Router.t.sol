@@ -4,6 +4,8 @@ import {Test, console} from "forge-std/Test.sol";
 import {UniswapV2Factory} from "../src/UniswapV2Factory.sol";
 import {ERC20Mintable} from "./mocks/ERC20Mintable.sol";
 import {UniswapV2Router} from "../src/UniswapV2Router.sol";
+import {UniswapV2Pair} from "../src/UniswapV2Pair.sol";
+import {UniswapV2Library} from "../src/libraries/UniswapV2Library.sol";
 
 contract UniswapV2RouterTest is Test{
     UniswapV2Factory factory;
@@ -39,25 +41,11 @@ contract UniswapV2RouterTest is Test{
 
         router.addLiquidity(address(tokenA), address(tokenB), 1 ether, 1 ether, 1 ether, 1 ether, address(this));
 
-        // address pairAddress = factory.pairs(address(tokenA), address(tokenB));
+        address pairAddress = factory.pairs(address(tokenA), address(tokenB));
 
-        // assertEq(pairAddress, address(0));
+        assertEq(pairAddress, 0x201Ee9eFA76c019ba536A9DFF26f273cA811b162);
     }
 
-    // function test_AddLiquidityNoPair() public {
-    //     tokenA.approve(address(router), 1 ether);
-    //     tokenA.approve(address(router), 1 ether);
 
-    //     (uint256 amountA, uint256 amountB, uint256 liquidity) = router.addLiquidity(address(tokenA), address(tokenB), 1 ether, 1 ether, 1 ether, 1 ether, address(this));
 
-    //     assertEq(amountA, 1 ether);
-    //     assertEq(amountB, 1 ether);
-    //     assertEq(liquidity, 1 ether - 1000);
-
-    //     address pairAddress = factory.pairs(address(tokenA), address(tokenB));
-
-    //     assertEq(tokenA.balanceOf(pairAddress), 1 ether);
-    //     assertEq(tokenB.balanceOf(pairAddress), 1 ether);
- 
-    // }
 }
