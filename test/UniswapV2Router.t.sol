@@ -74,5 +74,33 @@ contract UniswapV2RouterTest is Test{
         assertEq(tokenB.balanceOf(address(this)), 19 ether);
     }
 
+    function test_AddLiquidityAmountBOptimalIsOk() public {
+        address pairAddress = factory.createPair(
+            address(tokenA),
+            address(tokenB)
+        );
+
+        UniswapV2Pair pair = UniswapV2Pair(pairAddress);
+
+        assertEq(pair.token0(), address(tokenB));
+        assertEq(pair.token1(), address(tokenA));
+
+        // add initial liquidity to pair contract
+        tokenA.transfer(pairAddress, 1 ether);
+        tokenB.transfer(pairAddress, 2 ether);
+        pair.mint(address(this));
+
+        tokenA.approve(address(router), 1 ether);
+        tokenB.approve(address(router), 2 ether);
+
+
+        (uint256 amountA, uint256 amountB, uint256 liquidity) = router.addLiquidity(address(tokenA), address(tokenB), 1 ether, 2 ether, 1 ether, 1.9 ether, address(this));
+
+        assertEq(amountA, 1 ether);
+        assertEq(amountB, 2 ether);
+
+        assertEq(liquidity,  1414213562373095048);
+    }
+
 
 }

@@ -15,7 +15,7 @@ library UniswapV2Library {
         //get reserves
         (uint256 reserve0, uint256 reserve1, ) = IUniswapV2Pair(pairFor(factoryAddress, token0, token1)).getReserves();
         //set correct reserves and return them i.e. same order the tokens were provided in
-        (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve1);
+        (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
     }
 
     function quote(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) public pure returns (uint256 amountOut) {
