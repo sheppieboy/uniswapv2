@@ -70,10 +70,28 @@ contract UniswapV2Router {
             if(amounts[amounts.length - 1] < amountOutMin) revert InsufficientOutputAmount();
 
             //contract initializes a swap by sending input tokens to the first pair
-            _safeTransferFrom(path[0], msg.sender, UniswapV2Library.pairFor(address(factory), path[0], path[1]), value);
+            _safeTransferFrom(path[0], msg.sender, UniswapV2Library.pairFor(address(factory), path[0], path[1]), amounts[0]);
 
             //performns chained swaps
             _swap(amounts, path, to);
+        }
+
+        //PRIVATE FUNCTIONS
+
+        function _swap(uint256[] memory amounts, address[] memory path, address _to) private {
+            for(uint256 i; i < path.length -1; i++){
+                //sort addresses
+                (address input, address output) = (path[i], path[i + 1]);
+                (address token0, ) = UniswapV2Library.sortTokens(input, output);
+
+                //sorting amounts
+                uint256 amountOut = amounts[i + 1];
+                (uint256 amount0Out, uint256 amount1Out) = input == token0 ? (uint256(0), amountOut) : (amountOut, uint256(0));
+
+                address to = i < path.length - 2 ? UniswapV2Library.pairFor(address(factory), output, path[i +2]) : _to;
+
+                IUniswapV2Pair(UniswapV2Library.pairFor(address(factory), input, output)).swap(amount0Out, amount1Out, to, "");
+            }
         }
 
         function _calculateLiquidity(
@@ -83,7 +101,7 @@ contract UniswapV2Router {
             uint256 amountBDesired, 
             uint256 amountAMin, 
             uint256 amountBMin
-            ) internal returns(uint256 amountA, uint256 amountB){
+            ) private returns(uint256 amountA, uint256 amountB){
                 
                 (uint256 reserveA, uint256 reserveB) = UniswapV2Library.getReserves(address(factory), tokenA, tokenB);
 
