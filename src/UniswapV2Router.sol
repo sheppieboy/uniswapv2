@@ -7,6 +7,7 @@ import {UniswapV2Library} from "./UniswapV2Library.sol";
 error InsufficientBAmount();
 error InsufficientAAmount();
 error SafeTransferFailed();
+error InsufficientOutputAmount();
 
 contract UniswapV2Router {
     IUniswapV2Factory factory;
@@ -53,6 +54,27 @@ contract UniswapV2Router {
             if (amountB < amountBMin) revert InsufficientBAmount();
         }
 
+        //when we have an exact amount of tokens and want to get some, calculated, amount in exchange, it makes chained swaps along the specified path
+        //which is a sequence of token addresses, the final amount is sent to address to
+
+        //the path parameter might seem complex, but it's just an array of token addresses
+        //If we want to swap Token A for Token B directly, the path will only contain Token A and Token B addresses
+        //If we want to swap Token A for Token C via Token B, the path will contain: Token A address, Token B address, Token C address, the contract would swap Token A for Token B
+        //and then Token B for Token C
+        function swapExactTokensFor(uint256 amountIn, uint256 amountOutMin, address[] calldata path, address to) public returns (uint256[] memory amounts){
+            //this function simply extracts pairs of tokens from the path (e.g. [[tokenA, tokenB], [tokenB, tokenC]]) and then iteratively calls getAmountOut for each of them to
+            //to build an array of output amounts
+            amounts = UniswapV2Library.getAmountsOut(address(factory), amountIn, path);
+
+            //after obtaining output amounts, we can verify the final amount right away
+            if(amounts[amounts.length - 1] < amountOutMin) revert InsufficientOutputAmount();
+
+            //contract initializes a swap by sending input tokens to the first pair
+            _safeTransferFrom(path[0], msg.sender, UniswapV2Library.pairFor(address(factory), path[0], path[1]), value);
+
+            //performns chained swaps
+            _swap(amounts, path, to);
+        }
 
         function _calculateLiquidity(
             address tokenA, 
