@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 import {IUniswapV2Factory} from "./interfaces/IUniswapV2Factory.sol";
 import {IUniswapV2Pair} from "./interfaces/IUniswapV2Pair.sol";
-import {UniswapV2Library} from "./libraries/UniswapV2Library.sol";
+import {UniswapV2Library} from "./UniswapV2Library.sol";
 
 error InsufficientBAmount();
 error InsufficientAAmount();

@@ -5,7 +5,7 @@ import {UniswapV2Factory} from "../src/UniswapV2Factory.sol";
 import {ERC20Mintable} from "./mocks/ERC20Mintable.sol";
 import {UniswapV2Router} from "../src/UniswapV2Router.sol";
 import {UniswapV2Pair} from "../src/UniswapV2Pair.sol";
-import {UniswapV2Library} from "../src/libraries/UniswapV2Library.sol";
+import {UniswapV2Library} from "../src/UniswapV2Library.sol";
 
 contract UniswapV2RouterTest is Test{
     UniswapV2Factory factory;

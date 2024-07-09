@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {IUniswapV2Pair} from "../interfaces/IUniswapV2Pair.sol";
-import {UniswapV2Pair} from "../UniswapV2Pair.sol";
+import {IUniswapV2Pair} from "./interfaces/IUniswapV2Pair.sol";
+import {UniswapV2Pair} from "./UniswapV2Pair.sol";
 
 error InsufficientAmount();
 error InsufficientLiquidity();

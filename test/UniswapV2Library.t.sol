@@ -4,7 +4,7 @@ import {Test, console} from "forge-std/Test.sol";
 import {UniswapV2Factory} from "../src/UniswapV2Factory.sol";
 import {UniswapV2Pair} from "../src/UniswapV2Pair.sol";
 import {ERC20Mintable} from "./mocks/ERC20Mintable.sol";
-import {UniswapV2Library} from "../src/libraries/UniswapV2Library.sol";
+import {UniswapV2Library} from "../src/UniswapV2Library.sol";
 
 
 contract UniswapV2LibraryTest is Test {
