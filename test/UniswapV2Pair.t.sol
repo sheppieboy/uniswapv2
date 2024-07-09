@@ -222,6 +222,17 @@ contract UniswapV2PairTest is Test{
         assertReserves(1 ether + 0.1 ether, 2 ether - 0.18 ether);
     }
 
+     function test_SwapUnpaidFee() public {
+        token0.transfer(address(pair), 1 ether);
+        token1.transfer(address(pair), 2 ether);
+        pair.mint(address(this));
+
+        token0.transfer(address(pair), 0.1 ether);
+
+        vm.expectRevert(encodeError("InvalidK()"));
+        pair.swap(0, 0.181322178776029827 ether, address(this));
+    }
+
     function test_SwapBasicScenarioInReverse() public {
         token0.transfer(address(pair), 1 ether);
         token1.transfer(address(pair), 2 ether);

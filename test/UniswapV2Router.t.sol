@@ -47,7 +47,7 @@ contract UniswapV2RouterTest is Test{
 
         address pairAddress = factory.pairs(address(tokenA), address(tokenB));
 
-        assertEq(pairAddress, 0x201Ee9eFA76c019ba536A9DFF26f273cA811b162);
+        assertEq(pairAddress, 0x845A384Ced3C8433b8934816B1538318f648DAaa);
     }
 
 
