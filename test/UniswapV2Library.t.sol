@@ -169,5 +169,25 @@ contract UniswapV2LibraryTest is Test {
         UniswapV2Library.getAmountsOut(address(factory), 0.1 ether, path);
     }
 
+    function test_GetAmountsIn() public pure {
+        uint256 amountIn = UniswapV2Library.getAmountIn(1495, 1 ether, 1.5 ether);
+        assertEq(amountIn, 1000);
+    }
+
+    function test_RevertWhen_GetAmountInWithZeroInput() public {
+        vm.expectRevert(encodeError("InsufficientAmount()"));
+        UniswapV2Library.getAmountIn(0, 1.5 ether, 1.5 ether);
+    }
+
+    function test_RevertWhen_GetAmountInWithZeroReserveIn() public {
+        vm.expectRevert(encodeError("InsufficientLiquidity()"));
+        UniswapV2Library.getAmountIn(1000, 0 ether, 1.5 ether);
+    }
+
+    function test_RevertWhen_GetAmountIntWithZeroReserveOut() public {
+        vm.expectRevert(encodeError("InsufficientLiquidity()"));
+        UniswapV2Library.getAmountIn(1000, 1.5 ether, 0 ether);
+    }
+
 
 }
