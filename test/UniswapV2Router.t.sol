@@ -192,4 +192,27 @@ contract UniswapV2RouterTest is Test{
 
     }
 
+    function test_RemovePartialLiquidity() public {
+        tokenA.approve(address(router), 1 ether);
+        tokenB.approve(address(router), 1 ether);
+        router.addLiquidity(address(tokenA), address(tokenB), 1 ether, 1 ether, 1 ether, 1 ether, address(this));
+        address pairAddress = factory.pairs(address(tokenA), address(tokenB));
+        UniswapV2Pair pair = UniswapV2Pair(pairAddress);
+        uint256 liquidity = pair.balanceOf(address(this));
+
+        uint256 partialLiquidity = (liquidity * 3)/ 10; //i.e. 30% of liquidity is removed
+
+        pair.approve(address(router), partialLiquidity);
+
+        router.removeLiquidity(address(tokenA), address(tokenB), partialLiquidity, 0.3 ether - 300, 0.3 ether - 300, address(this));
+
+        (uint256 reserve0, uint256 reserve1,) = pair.getReserves();
+        assertEq(reserve0, 0.7 ether + 300);
+        assertEq(reserve1, 0.7 ether + 300);
+        assertEq(pair.balanceOf(address(this)), 0.7 ether - 700);
+        assertEq(pair.totalSupply(), 0.7 ether + 300);
+        assertEq(tokenA.balanceOf(address(this)), 20 ether - 0.7 ether - 300);
+        assertEq(tokenB.balanceOf(address(this)), 20 ether - 0.7 ether - 300);
+    }
+
 }
