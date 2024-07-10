@@ -14,6 +14,7 @@ contract UniswapV2RouterTest is Test{
 
     ERC20Mintable tokenA;
     ERC20Mintable tokenB;
+    ERC20Mintable tokenC;
 
     function setUp() public {
         factory = new UniswapV2Factory();
@@ -21,9 +22,11 @@ contract UniswapV2RouterTest is Test{
 
         tokenA = new ERC20Mintable("Token A", "A");
         tokenB = new ERC20Mintable("Token B", "B");
+        tokenC = new ERC20Mintable("Token C", "C");
 
         tokenA.mint(20 ether, address(this));
         tokenB.mint(20 ether, address(this));
+        tokenC.mint(20 ether, address(this));
     }
 
     function encodeError(string memory error) internal pure returns(bytes memory encoded){
@@ -241,6 +244,28 @@ contract UniswapV2RouterTest is Test{
 
          vm.expectRevert(encodeError("InsufficientBAmount()"));
         router.removeLiquidity(address(tokenA), address(tokenB), liquidity, 1 ether - 1000, 1 ether, address(this));
+    }
+
+    function test_SwapExactTokensForTokens() public {
+        tokenA.approve(address(router), 1 ether);
+        tokenB.approve(address(router), 2 ether);
+        tokenC.approve(address(router), 1 ether);
+
+        router.addLiquidity(address(tokenA), address(tokenB), 1 ether, 1 ether, 1 ether, 1 ether, address(this));
+
+        router.addLiquidity(address(tokenB), address(tokenC), 1 ether, 1 ether, 1 ether, 1 ether, address(this));
+
+        address[] memory path = new address[](3);
+        path[0] = address(tokenA);
+        path[1] = address(tokenB);
+        path[2] = address(tokenC);
+
+        tokenA.approve(address(router), 0.3 ether);
+        router.swapExactTokensFor(0.3 ether, 0.1 ether, path, address(this));
+
+        assertEq(tokenA.balanceOf(address(this)), 20 ether - 1 ether - 0.3 ether);
+        assertEq(tokenB.balanceOf(address(this)), 20 ether - 2 ether);
+        assertEq(tokenC.balanceOf(address(this)), 20 ether - 1 ether + 0.186691414219734305 ether);
     }
 
 }
