@@ -215,4 +215,32 @@ contract UniswapV2RouterTest is Test{
         assertEq(tokenB.balanceOf(address(this)), 20 ether - 0.7 ether - 300);
     }
 
+    function test_RevertWhen_RemoveLiquidityInsufficientAAmount() public {
+        tokenA.approve(address(router), 1 ether);
+        tokenB.approve(address(router), 1 ether);
+        router.addLiquidity(address(tokenA), address(tokenB), 1 ether, 1 ether, 1 ether, 1 ether, address(this));
+        address pairAddress = factory.pairs(address(tokenA), address(tokenB));
+        UniswapV2Pair pair = UniswapV2Pair(pairAddress);
+        uint256 liquidity = pair.balanceOf(address(this));
+
+        pair.approve(address(router), liquidity);
+
+        vm.expectRevert(encodeError("InsufficientAAmount()"));
+        router.removeLiquidity(address(tokenA), address(tokenB), liquidity, 1 ether, 1 ether - 1000, address(this));
+    }
+
+    function test_RevertWhen_RemoveLiquidityInsufficientBAmount() public {
+        tokenA.approve(address(router), 1 ether);
+        tokenB.approve(address(router), 1 ether);
+        router.addLiquidity(address(tokenA), address(tokenB), 1 ether, 1 ether, 1 ether, 1 ether, address(this));
+        address pairAddress = factory.pairs(address(tokenA), address(tokenB));
+        UniswapV2Pair pair = UniswapV2Pair(pairAddress);
+        uint256 liquidity = pair.balanceOf(address(this));
+
+        pair.approve(address(router), liquidity);
+
+         vm.expectRevert(encodeError("InsufficientBAmount()"));
+        router.removeLiquidity(address(tokenA), address(tokenB), liquidity, 1 ether - 1000, 1 ether, address(this));
+    }
+
 }
