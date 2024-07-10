@@ -32,6 +32,8 @@ contract UniswapV2Pair is ERC20, Math{
     uint112 private reserve0;
     uint112 private reserve1;
 
+    bool private isEntered;
+
     uint256 public price0CumulativeLast;
     uint256 public price1CumulativeLast;
 
@@ -49,7 +51,15 @@ contract UniswapV2Pair is ERC20, Math{
         token1 = _token1;
     }
 
-    function swap(uint256 amount0Out, uint256 amount1Out, address to, bytes calldata data) public {
+    modifier nonReentrant() {
+        require(!isEntered);
+        isEntered = true;
+        _;
+        
+        isEntered = false;
+    }
+
+    function swap(uint256 amount0Out, uint256 amount1Out, address to, bytes calldata data) public nonReentrant {
         if (amount0Out == 0 && amount1Out == 0) revert InsufficientOutputAmount();
 
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
