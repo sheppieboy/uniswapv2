@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 import {ERC20} from "../lib/solmate/src/tokens/ERC20.sol";
 import {Math} from "./libraries/Math.sol";
 import {UQ112x112} from "./libraries/UQ112x112.sol";
+import {IUniswapV2Callee} from "./interfaces/IUniswapV2Callee.sol";
 
 interface IERC20 {
     function balanceOf(address) external returns (uint256);
@@ -48,7 +49,7 @@ contract UniswapV2Pair is ERC20, Math{
         token1 = _token1;
     }
 
-    function swap(uint256 amount0Out, uint256 amount1Out, address to) public {
+    function swap(uint256 amount0Out, uint256 amount1Out, address to, bytes calldata data) public {
         if (amount0Out == 0 && amount1Out == 0) revert InsufficientOutputAmount();
 
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
@@ -57,6 +58,7 @@ contract UniswapV2Pair is ERC20, Math{
 
         if (amount0Out > 0) _safeTransfer(token0, to, amount0Out);
         if (amount1Out > 0) _safeTransfer(token1, to, amount1Out);
+        if (data.length > 0) IUniswapV2Callee(to).uniswapV2Call(msg.sender, amount0Out, amount1Out, data);
 
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
         uint256 balance1 = IERC20(token1).balanceOf(address(this));

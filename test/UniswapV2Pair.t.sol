@@ -213,7 +213,7 @@ contract UniswapV2PairTest is Test{
         pair.mint(address(this));
 
         token0.transfer(address(pair), 0.1 ether);
-        pair.swap(0, 0.18 ether, address(this));
+        pair.swap(0, 0.18 ether, address(this), "");
 
         assertEq(token0.balanceOf(address(this)), 10 ether - 1 ether - 0.1 ether, "unexpected token0 balance");
 
@@ -230,7 +230,7 @@ contract UniswapV2PairTest is Test{
         token0.transfer(address(pair), 0.1 ether);
 
         vm.expectRevert(encodeError("InvalidK()"));
-        pair.swap(0, 0.181322178776029827 ether, address(this));
+        pair.swap(0, 0.181322178776029827 ether, address(this), "");
     }
 
     function test_SwapBasicScenarioInReverse() public {
@@ -239,7 +239,7 @@ contract UniswapV2PairTest is Test{
         pair.mint(address(this));
 
         token1.transfer(address(pair), 0.2 ether);
-        pair.swap(0.09 ether, 0, address(this));
+        pair.swap(0.09 ether, 0, address(this), "");
 
 
         assertEq(token0.balanceOf(address(this)), 10 ether - 1 ether + 0.09 ether, "unexpected token0 balance");
@@ -254,7 +254,7 @@ contract UniswapV2PairTest is Test{
 
         token0.transfer(address(pair), 0.1 ether);
         token1.transfer(address(pair), 0.2 ether);
-        pair.swap(0.09 ether, 0.18 ether, address(this));
+        pair.swap(0.09 ether, 0.18 ether, address(this), "");
 
         assertEq(token0.balanceOf(address(this)), 10 ether - 1 ether - 0.01 ether, "unexpected token0 balance");
         assertEq(token1.balanceOf(address(this)), 10 ether - 2 ether - 0.02 ether, "unexpected token1 balance");
@@ -268,7 +268,7 @@ contract UniswapV2PairTest is Test{
         pair.mint(address(this));
 
         vm.expectRevert(encodeError("InsufficientOutputAmount()"));
-        pair.swap(0, 0, address(this));
+        pair.swap(0, 0, address(this), "");
     }
 
     function test_RevertWhen_SwappingMoreThanLiquidity() public {
@@ -277,10 +277,10 @@ contract UniswapV2PairTest is Test{
         pair.mint(address(this));
 
         vm.expectRevert(encodeError("InsufficientLiquidity()"));
-        pair.swap(1.1 ether, 0, address(this));
+        pair.swap(1.1 ether, 0, address(this), "");
 
         vm.expectRevert(encodeError("InsufficientLiquidity()"));
-        pair.swap(0, 2.2 ether, address(this));
+        pair.swap(0, 2.2 ether, address(this), "");
     }
 
     function test_SwapUnderpriced() public {
@@ -289,7 +289,7 @@ contract UniswapV2PairTest is Test{
         pair.mint(address(this));
 
         token0.transfer(address(pair), 0.1 ether);
-        pair.swap(0, 0.09 ether, address(this));
+        pair.swap(0, 0.09 ether, address(this), "");
 
         assertEq(token0.balanceOf(address(this)), 10 ether - 1 ether - 0.1 ether, "unexpected token0 balance");
         assertEq(token1.balanceOf(address(this)), 10 ether - 2 ether + 0.09 ether, "unexpected token1 balance");
@@ -304,7 +304,7 @@ contract UniswapV2PairTest is Test{
 
         token0.transfer(address(pair), 0.1 ether);
         vm.expectRevert(encodeError("InvalidK()"));
-        pair.swap(0, 0.36 ether, address(this));
+        pair.swap(0, 0.36 ether, address(this), "");
 
         assertEq(token0.balanceOf(address(this)), 10 ether - 1 ether - 0.1 ether, "unexpected token0 balance");
         assertEq(token1.balanceOf(address(this)), 10 ether - 2 ether, "unexpected token1 balance");
@@ -370,6 +370,24 @@ contract UniswapV2PairTest is Test{
         assertCumulativePrices(initialPrice0 * 3 + newPrice0 * 3, initialPrice1 * 3 + newPrice1 * 3);
     }
 
+    function test_FlashLoan() public {
+        token0.transfer(address(pair), 1 ether);
+        token1.transfer(address(pair), 2 ether);
+        pair.mint(address(this));
+
+        uint256 flashloanAmount = 0.1 ether;
+        uint256 flashloanFee = (flashloanAmount * 1000)/997 - flashloanAmount + 1;
+
+        FlashLoaner fl = new FlashLoaner();
+
+        token1.transfer(address(fl), flashloanFee);
+
+        fl.flashloan(address(pair), 0, flashloanAmount, address(token1));
+
+        assertEq(token1.balanceOf(address(fl)), 0);
+        assertEq(token1.balanceOf(address(pair)), 2 ether + flashloanFee);
+    }
+
 }
 
 contract TestInteractiveContract{
@@ -385,5 +403,34 @@ contract TestInteractiveContract{
        uint256 liquidity = ERC20(_pairAddress).balanceOf(address(this));
        ERC20(_pairAddress).transfer(_pairAddress, liquidity);
        UniswapV2Pair(_pairAddress).burn(address(this));
+    }
+}
+
+contract FlashLoaner {
+    error InsufficientFlashLoanAmount();
+    
+    uint256 expectedLoanAmount;
+    
+    function flashloan(address pairAddress, uint256 amount0Out, uint256 amount1Out, address tokenAddress) public {
+        if (amount0Out > 0) {
+            expectedLoanAmount = amount0Out;
+        }
+
+        if (amount1Out > 0) {
+            expectedLoanAmount = amount1Out;
+        }
+
+        UniswapV2Pair(pairAddress).swap(amount0Out, amount1Out, address(this), abi.encode(tokenAddress));
+    }
+
+    //function that will be called by swap function in pair contract, the swap function is called by flashloan function
+
+    function uniswapV2Call(address sender, uint256 amount0Out, uint256 amount1Out, bytes calldata data) public {
+        address tokenAddress = abi.decode(data, (address));
+        uint256 balance = ERC20(tokenAddress).balanceOf(address(this));
+
+        if (balance < expectedLoanAmount) revert InsufficientFlashLoanAmount();
+
+        ERC20(tokenAddress).transfer(msg.sender, balance);
     }
 }
